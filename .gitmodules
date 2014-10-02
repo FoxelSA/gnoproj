@@ -4,3 +4,6 @@
 [submodule "lib/libgnomonic"]
 	path = lib/libgnomonic
 	url = https://github.com/FoxelSA/libgnomonic.git
+[submodule "lib/elphelphg"]
+	path = lib/elphelphg
+	url = https://github.com/FoxelSA/elphelphg.git

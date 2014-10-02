@@ -23,17 +23,6 @@ set(GNOPROJ_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 find_package(PkgConfig)
 
-# elphelphg
-pkg_check_modules(PC_LIBELPHELPHG elphelphg)
-set(LIBELPHELPHG_DEFINITIONS ${PC_LIBELPHELPHG_CFLAGS_OTHER})
-
-find_path(LIBELPHELPHG_INCLUDE_DIR elphelphg/camera.hpp
-  HINTS ${PC_LIBELPHELPHG_INCLUDEDIR} ${PC_LIBELPHELPHG_INCLUDE_DIRS}
-  PATH_SUFFIXES elphelphg )
-
-find_library(LIBELPHELPHG_LIBRARY NAMES elphelphg libelphelphg
-  HINTS ${PC_LIBELPHELPHG_LIBDIR} ${PC_LIBELPHELPHG_LIBRARY_DIRS} )
-
 # opencv
 find_package(OpenCV REQUIRED)
 
@@ -95,6 +84,17 @@ add_custom_target(
 set(LIB3DRECONSTRUCT_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/lib3dreconstruct/src)
 set(LIB3DRECONSTRUCT_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/lib3dreconstruct/bin/lib3dreconstruct.a)
 
+# lib3dreconstruct
+add_custom_target(
+  elphelphg
+  WORKING_DIRECTORY ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg
+  COMMAND cmake ./src/ 
+  COMMAND make
+)
+
+set(LIBELPHELPHG_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg/src)
+set(LIBELPHELPHG_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg/elphelphg/libelphelphg.so)
+
 # includes
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
@@ -103,19 +103,18 @@ include_directories(
   ${LIBXML2_INCLUDE_DIR} 
   ${LIB3DRECONSTRUCT_INCLUDE_DIR}  
   ${LIBGNOMONIC_INCLUDE_DIR}  
-  ${LIBINTER_INCLUDE_DIR}  
+  ${LIBINTER_INCLUDE_DIR}
   ${LIBBOOST_INCLUDE_DIR}
   ${LIBTIFF_INCLUDE_DIR}
 )
 
 # libraries
 set(GNOPROJ_LIBRARY_LIST
-  ${LIBELPHELPHG_LIBRARY}
+  ${LIBELPHELPHG_LIBS}
   ${OpenCV_LIBS}
   ${LIBXML2_LIBRARY}
   ${LIB3DRECONSTRUCT_LIBS}
   ${LIBGNOMONIC_LIBS}
-  ${LIBELPHELPHG_LIBS}
   ${LIBBOOST_SYSTEM_LIBRARY}
   ${LIBBOOST_FILESYSTEM_LIBRARY}
   ${LIBBOOST_REGEX_LIBRARY}
@@ -129,7 +128,7 @@ target_link_libraries(gnoproj
   ${GNOPROJ_LIBRARY_LIST}
 )
 
-add_dependencies(gnoproj libgnomonic lib3dreconstruct)
+add_dependencies(gnoproj libgnomonic lib3dreconstruct elphelphg)
 
 install(TARGETS gnoproj DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
