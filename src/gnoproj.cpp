@@ -96,38 +96,64 @@ int main(int argc, char** argv) {
        /* Initialize output image structure */
        IplImage* out_img = cvCreateImage( cvSize( channel->sensor->pixelCorrectionWidth, channel->sensor->pixelCorrectionHeight ), IPL_DEPTH_8U , eqr_img->nChannels );
 
-      /* Gnomonic projection of the equirectangular tile */
-      lg_ttg_uc(
+      if(!normalizedFocal){
+          /* Gnomonic projection of the equirectangular tile */
+          lg_ttg_uc(
+              ( inter_C8_t *) eqr_img->imageData,
+              eqr_img->width,
+              eqr_img->height,
+              eqr_img->nChannels,
+              ( inter_C8_t *) out_img->imageData,
+              out_img->width,
+              out_img->height,
+              out_img->nChannels,
+              sensor->px0,
+              sensor->py0,
+              eqr->imageFullWidth,
+              eqr->imageFullLength-1, // there's an extra pixel for wrapping
+              eqr->xPosition,
+              eqr->yPosition,
+              eqr->xPosition+eqr->x0,
+              eqr->yPosition+eqr->y0,
+              rad(sensor->roll),
+              rad(sensor->azimuth),
+              rad(sensor->elevation),
+              rad(sensor->heading),
+              0.001*sensor->pixelSize,
+              sensor->focalLength,
+              li_bilinearf
+          );
 
-          ( inter_C8_t *) eqr_img->imageData,
-          eqr_img->width,
-          eqr_img->height,
-          eqr_img->nChannels,
-          ( inter_C8_t *) out_img->imageData,
-          out_img->width,
-          out_img->height,
-          out_img->nChannels,
-          sensor->px0,
-          sensor->py0,
-          eqr->imageFullWidth,
-          eqr->imageFullLength-1, // there's an extra pixel for wrapping
-          eqr->xPosition,
-          eqr->yPosition,
-          eqr->xPosition+eqr->x0,
-          eqr->yPosition+eqr->y0,
-          rad(sensor->roll),
-          rad(sensor->azimuth),
-          rad(sensor->elevation),
-          rad(sensor->heading),
-          0.001*sensor->pixelSize,
-          sensor->focalLength,
-          li_bilinearf
-      );
-
-      if(!normalizedFocal)
-         output_image_filename+=std::string(info->dir)+"/"+info->timestamp+"-"+info->channel+"-RECT-SENSOR."+info->extension;
+          // create output image name
+          output_image_filename+=std::string(info->dir)+"/"+info->timestamp+"-"+info->channel+"-RECT-SENSOR."+info->extension;
+      }
       else
-         output_image_filename+=std::string(info->dir)+"/"+info->timestamp+"-"+info->channel+"-RECT-CONFOC."+info->extension;
+      {
+        /* Gnomonic projection of the equirectangular tile */
+         lg_ttg_focal(
+            ( inter_C8_t *) eqr_img->imageData,
+            eqr_img->width,
+            eqr_img->height,
+            eqr_img->nChannels,
+            ( inter_C8_t *) out_img->imageData,
+            out_img->width,
+            out_img->height,
+            out_img->nChannels,
+            eqr->imageFullWidth,
+            eqr->imageFullLength-1,
+            eqr->xPosition,
+            eqr->yPosition,
+            rad(sensor->azimuth)+rad(sensor->heading)+LG_PI,
+            rad(sensor->elevation),
+            rad(sensor->roll),
+            focal,
+            0.001*sensor->pixelSize,
+            li_bilinearf
+          );
+
+          // create output image name
+          output_image_filename+=std::string(info->dir)+"/"+info->timestamp+"-"+info->channel+"-RECT-CONFOC."+info->extension;
+      }
 
       /* Gnomonic image exportation */
       cvSaveImage(output_image_filename.c_str() , out_img, NULL );
