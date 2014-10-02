@@ -48,18 +48,38 @@ int main(int argc, char** argv) {
     /* Usage branch */
     if ( argc<3 || argc>4 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
         /* Display help */
-        printf( "Usage : %s <imagej_prefs_xml> <input_image> [ <output_image> ]\n\n",argv[0]);
+        printf( "Usage : %s <imagej_prefs_xml> <input_image> [ <focal> ]\n\n",argv[0]);
         return 1;
     }
 
-    char *imagej_prefs_xml=argv[1];
-    char *input_image_filename=argv[2];
-    std::string output_image_filename((argc==4)?argv[3]:"");
+    // load inputs
+    char *imagej_prefs_xml=argv[1];  //imagej xml configuration file
+    char *input_image_filename=argv[2]; // eqr image (input) filename
+    std::string output_image_filename; // output image filename
 
-    // set some output parameters
-     cout.setf(ios::left);
-     cout.setf(ios::scientific);
+    // check is a focal length is given, and update method if necessary
+    int  normalizedFocal(0);  // gnomonic projection method. 0 elphel method (default), 1 with constant focal
+    double focal = 0.0;       // focal length (in mm)
+    double minFocal = 0.05 ;  // lower bound for focal length
+    double maxFocal = 500.0;  // upper bound for focal length
+    std::string inputFocal((argc==4)?argv[3]:"");
 
+    // verify if input is present, and if yes, if it is consistant
+    if(inputFocal.length())
+    {
+      focal  = atof(inputFocal.c_str());
+      normalizedFocal = 1;
+
+      // check input focal
+      if( focal < minFocal || focal > maxFocal)
+      {
+        std::cerr << "Focal length is less than " << minFocal << " mm or bigger than " << maxFocal << " mm. ";
+        std::cerr << "Input focal is " << inputFocal << endl;
+        return 0;
+      }
+    }
+
+    // now load image, and do gnomonic projection
     try {
       CameraArray e4pi(CameraArray::EYESIS4PI_CAMERA,imagej_prefs_xml);
 
@@ -104,9 +124,10 @@ int main(int argc, char** argv) {
           li_bilinearf
       );
 
-      if (!output_image_filename.length()) {
-        output_image_filename+=std::string(info->dir)+"/"+info->timestamp+"-"+info->channel+"-"+info->attributes+"_GNO."+info->extension;
-      }
+      if(!normalizedFocal)
+         output_image_filename+=std::string(info->dir)+"/"+info->timestamp+"-"+info->channel+"-RECT-SENSOR."+info->extension;
+      else
+         output_image_filename+=std::string(info->dir)+"/"+info->timestamp+"-"+info->channel+"-RECT-CONFOC."+info->extension;
 
       /* Gnomonic image exportation */
       cvSaveImage(output_image_filename.c_str() , out_img, NULL );
