@@ -26,13 +26,13 @@ find_package(PkgConfig)
 # opencv
 find_package(OpenCV REQUIRED)
 
-# libtiff                
+# libtiff
 pkg_check_modules(PC_LIBTIFF QUIET libtiff)
 set(LIBTIFF_DEFINITIONS ${PC_LIBTIFF_CFLAGS_OTHER})
-                         
+
 find_path(LIBTIFF_INCLUDE_DIR tiff.h
   HINTS ${PC_LIBTIFF_INCLUDEDIR} ${PC_LIBTIFF_INCLUDE_DIRS}
-  PATH_SUFFIXES libtiff )                                                                                                                                     
+  PATH_SUFFIXES libtiff )
 find_library(LIBTIFF_LIBRARY NAMES tiff libtiff
   HINTS ${PC_LIBTIFF_LIBDIR} ${PC_LIBTIFF_LIBRARY_DIRS} )
 
@@ -75,20 +75,11 @@ set(LIBGNOMONIC_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/bin/libgnomonic.a)
 set(LIBINTER_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/lib/libinter/src)
 set(LIBINTER_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/lib/libinter/bin/libinter.a)
 
-# lib3dreconstruct
-add_custom_target(
-  lib3dreconstruct
-  COMMAND make
-  WORKING_DIRECTORY ${GNOPROJ_SOURCE_DIR}/../lib/lib3dreconstruct
-)
-set(LIB3DRECONSTRUCT_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/lib3dreconstruct/src)
-set(LIB3DRECONSTRUCT_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/lib3dreconstruct/bin/lib3dreconstruct.a)
-
-# lib3dreconstruct
+# libelphelphg
 add_custom_target(
   elphelphg
   WORKING_DIRECTORY ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg
-  COMMAND cmake ./src/ 
+  COMMAND cmake ./src/
   COMMAND make
 )
 
@@ -100,9 +91,8 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${LIBELPHELPHG_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
-  ${LIBXML2_INCLUDE_DIR} 
-  ${LIB3DRECONSTRUCT_INCLUDE_DIR}  
-  ${LIBGNOMONIC_INCLUDE_DIR}  
+  ${LIBXML2_INCLUDE_DIR}
+  ${LIBGNOMONIC_INCLUDE_DIR}
   ${LIBINTER_INCLUDE_DIR}
   ${LIBBOOST_INCLUDE_DIR}
   ${LIBTIFF_INCLUDE_DIR}
@@ -113,7 +103,6 @@ set(GNOPROJ_LIBRARY_LIST
   ${LIBELPHELPHG_LIBS}
   ${OpenCV_LIBS}
   ${LIBXML2_LIBRARY}
-  ${LIB3DRECONSTRUCT_LIBS}
   ${LIBGNOMONIC_LIBS}
   ${LIBBOOST_SYSTEM_LIBRARY}
   ${LIBBOOST_FILESYSTEM_LIBRARY}
@@ -128,7 +117,7 @@ target_link_libraries(gnoproj
   ${GNOPROJ_LIBRARY_LIST}
 )
 
-add_dependencies(gnoproj libgnomonic lib3dreconstruct elphelphg)
+add_dependencies(gnoproj libgnomonic elphelphg)
 
 install(TARGETS gnoproj DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
