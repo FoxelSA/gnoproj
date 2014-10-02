@@ -1,7 +1,7 @@
 
 ## gnoproj
 
-Gnomonic reprojection for equirectangular images from ElphelPHG cameras
+Gnomonic reprojection software for equirectangular images from ElphelPHG cameras
 
 ### Documentation
 
