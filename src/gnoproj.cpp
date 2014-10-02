@@ -9,6 +9,10 @@
  *
  *      Stéphane Flotron <s.flotron@foxel.ch>
  *
+ * Contributor(s):
+ *
+ *      Luc Deschenaux <luc.deschenaux@foxel.ch>
+ *
  *
  * This file is part of the FOXEL project <http://foxel.ch>.
  *
