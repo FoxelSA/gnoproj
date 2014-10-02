@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     }
 
     char *imagej_prefs_xml=argv[1];
-    char *input_image_filename=argv[2]; 
+    char *input_image_filename=argv[2];
     std::string output_image_filename((argc==4)?argv[3]:"");
 
     // set some output parameters
@@ -64,16 +64,14 @@ int main(int argc, char** argv) {
       CameraArray e4pi(CameraArray::EYESIS4PI_CAMERA,imagej_prefs_xml);
 
       struct utils::imagefile_info *info=utils::imagefile_parsename(input_image_filename);
-      
+
       int channel_index=atoi(info->channel);
       Channel *channel=e4pi.channel(channel_index);
       EqrData *eqr=channel->eqr;
       SensorData *sensor=channel->sensor;
 
       // load image
-      printf("load image\n");
       IplImage* eqr_img = cvLoadImage(input_image_filename, CV_LOAD_IMAGE_COLOR );
-      printf("done\n");
 
        /* Initialize output image structure */
        IplImage* out_img = cvCreateImage( cvSize( channel->sensor->pixelCorrectionWidth, channel->sensor->pixelCorrectionHeight ), IPL_DEPTH_8U , eqr_img->nChannels );
@@ -82,11 +80,11 @@ int main(int argc, char** argv) {
       lg_ttg_uc(
 
           ( inter_C8_t *) eqr_img->imageData,
-          eqr_img->width, 
-          eqr_img->height, 
-          eqr_img->nChannels, 
+          eqr_img->width,
+          eqr_img->height,
+          eqr_img->nChannels,
           ( inter_C8_t *) out_img->imageData,
-          out_img->width, 
+          out_img->width,
           out_img->height,
           out_img->nChannels,
           sensor->px0,
@@ -105,7 +103,7 @@ int main(int argc, char** argv) {
           sensor->focalLength,
           li_bilinearf
       );
-      
+
       if (!output_image_filename.length()) {
         output_image_filename+=std::string(info->dir)+"/"+info->timestamp+"-"+info->channel+"-"+info->attributes+"_GNO."+info->extension;
       }
