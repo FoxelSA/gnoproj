@@ -117,8 +117,6 @@ int main(int argc, char** argv) {
               eqr->imageFullLength-1, // there's an extra pixel for wrapping
               eqr->xPosition,
               eqr->yPosition,
-              eqr->xPosition+eqr->x0,
-              eqr->yPosition+eqr->y0,
               rad(sensor->roll),
               rad(sensor->azimuth),
               rad(sensor->elevation),
