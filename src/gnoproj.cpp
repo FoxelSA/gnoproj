@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
               rad(sensor->heading),
               0.001*sensor->pixelSize,
               sensor->focalLength,
-              li_bilinearf
+              li_bicubicf
           );
 
           // create output image name
@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
             rad(sensor->roll),
             focal,
             0.001*sensor->pixelSize,
-            li_bilinearf
+            li_bicubicf
           );
 
           // create output image name
