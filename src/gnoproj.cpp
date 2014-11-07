@@ -97,8 +97,8 @@ int main(int argc, char** argv) {
       // load image
       IplImage* eqr_img = cvLoadImage(input_image_filename, CV_LOAD_IMAGE_COLOR );
 
-       /* Initialize output image structure */
-       IplImage* out_img = cvCreateImage( cvSize( channel->sensor->pixelCorrectionWidth, channel->sensor->pixelCorrectionHeight ), IPL_DEPTH_8U , eqr_img->nChannels );
+      /* Initialize output image structure */
+      IplImage* out_img = cvCreateImage( cvSize( channel->sensor->pixelCorrectionWidth, channel->sensor->pixelCorrectionHeight ), IPL_DEPTH_8U , eqr_img->nChannels );
 
       if(!normalizedFocal){
           /* Gnomonic projection of the equirectangular tile */
@@ -159,6 +159,10 @@ int main(int argc, char** argv) {
 
       /* Gnomonic image exportation */
       cvSaveImage(output_image_filename.c_str() , out_img, NULL );
+
+      /* Free memory */
+      cvReleaseImage(&eqr_img);
+      cvReleaseImage(&out_img);
 
     } catch(std::exception &e) {
       std::cerr << e.what() << std::endl;
