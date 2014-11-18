@@ -1,11 +1,55 @@
+#
+# Gnoproj - gnomonic projection software
+#
+# Copyright (c) 2013-2014 FOXEL SA - http://foxel.ch
+# Please read <http://foxel.ch/license> for more information.
+#
+#
+# Author(s):
+#
+# Stéphane Flotron <s.flotron@foxel.ch>
+#
+#
+# This file is part of the FOXEL project <http://foxel.ch>.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# Additional Terms:
+#
+# You are required to preserve legal notices and author attributions in
+# that material or in the Appropriate Legal Notices displayed by works
+# containing it.
+#
+# You are required to attribute the work as explained in the "Usage and
+# Attribution" section of <http://foxel.ch/license>.
+#
+
+# ==============================================================================
+#  CMake base
+# ==============================================================================
+
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-
 project(gnoproj C CXX)
-
 set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_BUILD_TYPE Release)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(GNOPROJ_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
+# ==============================================================================
+#  C / C++ flags
+# ==============================================================================
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(warnings "-Wall -Wextra -Werror")
@@ -19,14 +63,23 @@ if (NOT CONFIGURED_ONCE)
         CACHE STRING "Flags used by the compiler during all build types." FORCE)
 endif()
 
-set(GNOPROJ_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+# ==============================================================================
+# OpenMP detection (needed by libgnomonic)
+# ==============================================================================
+FIND_PACKAGE(OpenMP)
+IF (OPENMP_FOUND)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+ ENDIF (OPENMP_FOUND)
 
+# ==============================================================================
+# OpenCV / pkgconfig  detection
+# ==============================================================================
 find_package(PkgConfig)
-
-# opencv
 find_package(OpenCV REQUIRED)
 
-# libtiff
+# ==============================================================================
+# libtiff / libxml2  detection (needed by elphelphg)
+# ==============================================================================
 pkg_check_modules(PC_LIBTIFF QUIET libtiff)
 set(LIBTIFF_DEFINITIONS ${PC_LIBTIFF_CFLAGS_OTHER})
 
@@ -47,7 +100,9 @@ find_path(LIBXML2_INCLUDE_DIR libxml/xpath.h
 find_library(LIBXML2_LIBRARY NAMES xml2 libxml2
              HINTS ${PC_LIBXML_LIBDIR} ${PC_LIBXML_LIBRARY_DIRS} )
 
-# libboost
+# ==============================================================================
+# Boost  detection (needed by elphelphg)
+# ==============================================================================
 pkg_check_modules(PC_LIBBOOST QUIET libboost-filesystem)
 set(LIBBOOST_DEFINITIONS ${PC_LIBBOOST_CFLAGS_OTHER})
 
@@ -62,7 +117,9 @@ find_library(LIBBOOST_SYSTEM_LIBRARY NAMES boost_system libboost_system
 find_library(LIBBOOST_REGEX_LIBRARY NAMES boost_regex libboost_regex
    HINTS ${PC_LIBBOOST_LIBDIR} ${PC_LIBBOOST_LIBRARY_DIRS} )
 
-# libgnomonic
+# ==============================================================================
+#  submodules Lignomonic and libinter
+# ==============================================================================
 add_custom_target(
   libgnomonic
   COMMAND make
@@ -75,7 +132,9 @@ set(LIBGNOMONIC_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/bin/libgnomonic.a)
 set(LIBINTER_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/lib/libinter/src)
 set(LIBINTER_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/lib/libinter/bin/libinter.a)
 
-# libelphelphg
+# ==============================================================================
+# submodules elphelphg
+# ==============================================================================
 add_custom_target(
   elphelphg
   WORKING_DIRECTORY ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg
@@ -86,7 +145,9 @@ add_custom_target(
 set(LIBELPHELPHG_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg/src)
 set(LIBELPHELPHG_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg/elphelphg/libelphelphg.so)
 
-# includes
+# ==============================================================================
+# Include directories
+# ==============================================================================
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${LIBELPHELPHG_INCLUDE_DIR}
@@ -98,7 +159,9 @@ include_directories(
   ${LIBTIFF_INCLUDE_DIR}
 )
 
-# libraries
+# ==============================================================================
+# Library linkage
+# ==============================================================================
 set(GNOPROJ_LIBRARY_LIST
   ${LIBELPHELPHG_LIBS}
   ${OpenCV_LIBS}
@@ -111,7 +174,10 @@ set(GNOPROJ_LIBRARY_LIST
   ${LIBTIFF_LIBRARY}
  #  ${CMAKE_THREAD_LIBS_INIT}
 )
-# build gnoproj
+
+# ==============================================================================
+# Build executable
+# ==============================================================================
 add_executable(gnoproj gnoproj.cpp)
 target_link_libraries(gnoproj
   ${GNOPROJ_LIBRARY_LIST}

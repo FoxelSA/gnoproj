@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
 
       if(!normalizedFocal){
           /* Gnomonic projection of the equirectangular tile */
-          lg_ttg_uc(
+          lg_ttg_elphel(
               ( inter_C8_t *) eqr_img->imageData,
               eqr_img->width,
               eqr_img->height,
@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
       else
       {
         /* Gnomonic projection of the equirectangular tile */
-         lg_ttg_focal(
+         lg_ttg_center(
             ( inter_C8_t *) eqr_img->imageData,
             eqr_img->width,
             eqr_img->height,
