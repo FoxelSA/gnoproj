@@ -52,13 +52,13 @@ int main(int argc, char** argv) {
     /* Usage branch */
     if ( argc<3 || argc>4 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
         /* Display help */
-        printf( "Usage : %s <imagej_prefs_xml> <input_image> [ <focal> ]\n\n",argv[0]);
+        printf( "Usage : %s <input_image> <imagej_prefs_xml> [ <focal> ]\n\n",argv[0]);
         return 1;
     }
 
     // load inputs
-    char *imagej_prefs_xml=argv[1];  //imagej xml configuration file
-    char *input_image_filename=argv[2]; // eqr image (input) filename
+    char *input_image_filename=argv[1]; // eqr image (input) filename
+    char *imagej_prefs_xml=argv[2];  //imagej xml configuration file
     std::string output_image_filename; // output image filename
 
     // check is a focal length is given, and update method if necessary
