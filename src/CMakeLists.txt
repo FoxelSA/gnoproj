@@ -78,46 +78,6 @@ find_package(PkgConfig)
 find_package(OpenCV REQUIRED)
 
 # ==============================================================================
-# libtiff / libxml2  detection (needed by elphelphg)
-# ==============================================================================
-pkg_check_modules(PC_LIBTIFF QUIET libtiff)
-set(LIBTIFF_DEFINITIONS ${PC_LIBTIFF_CFLAGS_OTHER})
-
-find_path(LIBTIFF_INCLUDE_DIR tiff.h
-  HINTS ${PC_LIBTIFF_INCLUDEDIR} ${PC_LIBTIFF_INCLUDE_DIRS}
-  PATH_SUFFIXES libtiff )
-find_library(LIBTIFF_LIBRARY NAMES tiff libtiff
-  HINTS ${PC_LIBTIFF_LIBDIR} ${PC_LIBTIFF_LIBRARY_DIRS} )
-
-# libxml2
-pkg_check_modules(PC_LIBXML QUIET libxml-2.0)
-set(LIBXML2_DEFINITIONS ${PC_LIBXML_CFLAGS_OTHER})
-
-find_path(LIBXML2_INCLUDE_DIR libxml/xpath.h
-          HINTS ${PC_LIBXML_INCLUDEDIR} ${PC_LIBXML_INCLUDE_DIRS}
-          PATH_SUFFIXES libxml2 )
-
-find_library(LIBXML2_LIBRARY NAMES xml2 libxml2
-             HINTS ${PC_LIBXML_LIBDIR} ${PC_LIBXML_LIBRARY_DIRS} )
-
-# ==============================================================================
-# Boost  detection (needed by elphelphg)
-# ==============================================================================
-pkg_check_modules(PC_LIBBOOST QUIET libboost-filesystem)
-set(LIBBOOST_DEFINITIONS ${PC_LIBBOOST_CFLAGS_OTHER})
-
-find_path(LIBBOOST_INCLUDE_DIR boost/filesystem.hpp
-  HINTS ${PC_LIBBOOST_INCLUDEDIR} ${PC_LIBBOOST_INCLUDE_DIRS}
-          PATH_SUFFIXES boost )
-
-find_library(LIBBOOST_FILESYSTEM_LIBRARY NAMES boost_filesystem libboost_filesystem
-   HINTS ${PC_LIBBOOST_LIBDIR} ${PC_LIBBOOST_LIBRARY_DIRS} )
-find_library(LIBBOOST_SYSTEM_LIBRARY NAMES boost_system libboost_system
-   HINTS ${PC_LIBBOOST_LIBDIR} ${PC_LIBBOOST_LIBRARY_DIRS} )
-find_library(LIBBOOST_REGEX_LIBRARY NAMES boost_regex libboost_regex
-   HINTS ${PC_LIBBOOST_LIBDIR} ${PC_LIBBOOST_LIBRARY_DIRS} )
-
-# ==============================================================================
 #  submodules Lignomonic and libinter
 # ==============================================================================
 add_custom_target(
@@ -133,46 +93,35 @@ set(LIBINTER_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/lib/libinter/s
 set(LIBINTER_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/lib/libinter/bin/libinter.a)
 
 # ==============================================================================
-# submodules elphelphg
+#  submodules libfastcal
 # ==============================================================================
 add_custom_target(
-  elphelphg
-  WORKING_DIRECTORY ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg
-  COMMAND cmake ./src/
-  COMMAND make
+  libfastcal
+  COMMAND make clean-all && make [OPENMP=false]
+  WORKING_DIRECTORY ${GNOPROJ_SOURCE_DIR}/../lib/libfastcal
 )
-
-set(LIBELPHELPHG_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg/src)
-set(LIBELPHELPHG_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/elphelphg/elphelphg/libelphelphg.so)
+set(LIBFASTCAL_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/libfastcal/src)
+set(LIBFASTCAL_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/libfastcal/bin/libfastcal.a)
 
 # ==============================================================================
 # Include directories
 # ==============================================================================
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
-  ${LIBELPHELPHG_INCLUDE_DIR}
   ${OpenCV_INCLUDE_DIRS}
-  ${LIBXML2_INCLUDE_DIR}
   ${LIBGNOMONIC_INCLUDE_DIR}
   ${LIBINTER_INCLUDE_DIR}
-  ${LIBBOOST_INCLUDE_DIR}
-  ${LIBTIFF_INCLUDE_DIR}
+  ${LIBFASTCAL_INCLUDE_DIR}
 )
 
 # ==============================================================================
 # Library linkage
 # ==============================================================================
 set(GNOPROJ_LIBRARY_LIST
-  ${LIBELPHELPHG_LIBS}
   ${OpenCV_LIBS}
-  ${LIBXML2_LIBRARY}
   ${LIBGNOMONIC_LIBS}
-  ${LIBBOOST_SYSTEM_LIBRARY}
-  ${LIBBOOST_FILESYSTEM_LIBRARY}
-  ${LIBBOOST_REGEX_LIBRARY}
   ${LIBINTER_LIBS}
-  ${LIBTIFF_LIBRARY}
- #  ${CMAKE_THREAD_LIBS_INIT}
+  ${LIBFASTCAL_LIBS}
 )
 
 # ==============================================================================
@@ -183,7 +132,7 @@ target_link_libraries(gnoproj
   ${GNOPROJ_LIBRARY_LIST}
 )
 
-add_dependencies(gnoproj libgnomonic elphelphg)
+add_dependencies(gnoproj libgnomonic libfastcal)
 
 install(TARGETS gnoproj DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 

@@ -44,19 +44,14 @@
 #define GNOPROJ_HPP_
 
 #include <iostream>
-#include <elphelphg/cameraArray.hpp>
-#include <elphelphg/camera.hpp>
-#include <elphelphg/channel.hpp>
-#include <elphelphg/file.hpp>
-#include <elphelphg/xml.hpp>
-#include <elphelphg/eqrData.hpp>
-#include <elphelphg/sensorData.hpp>
-#include <elphelphg/utils.hpp>
 #include <iomanip>
 #include <gnomonic-all.h>
+#include <fastcal-all.h>
 #include <inter-all.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <vector>
+#include <stdlib.h>
 #include <string.h>
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
