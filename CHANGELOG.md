@@ -1,5 +1,5 @@
 ## 1.0 (December 17, 2014)
-- `FIXED`: Better calibration data access
+- `FIXED`: Better access to calibration data
 - `FIXED`: updated submodules
 
 ## 0.2 (November 19, 2014)
