@@ -182,6 +182,9 @@ int main(int argc, char** argv) {
        return 1;
     }
 
+    /* Release descriptor */
+    lf_release( & lfDesc );
+    
     // load image
     IplImage* eqr_img = cvLoadImage(input_image_filename, CV_LOAD_IMAGE_COLOR );
 
