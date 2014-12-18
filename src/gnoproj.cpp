@@ -75,15 +75,16 @@ static bool split ( const std::string src, const std::string& delim, std::vector
 int main(int argc, char** argv) {
 
     /* Usage branch */
-    if ( argc<3 || argc>4 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
+    if ( argc < 4 || argc > 5 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
         /* Display help */
-        printf( "Usage : %s <input_image> <camera mac adress> [ <focal> ]\n\n",argv[0]);
+        printf( "Usage : %s <input_image>  <camera mac adress>  <mount point> [ <focal> ]\n\n",argv[0]);
         return 1;
     }
 
     // load inputs
     char* input_image_filename=argv[1]; // eqr image (input) filename
     std::string mac_address(argv[2]);  //mac adress
+    std::string mount_point(argv[3]);  // mount point
     std::string input_image(input_image_filename);
     std::string output_image_filename; // output image filename
 
@@ -92,7 +93,7 @@ int main(int argc, char** argv) {
     double focal = 0.0;       // focal length (in mm)
     double minFocal = 0.05 ;  // lower bound for focal length
     double maxFocal = 500.0;  // upper bound for focal length
-    std::string inputFocal((argc==4)?argv[3]:"");
+    std::string inputFocal((argc==5)?argv[4]:"");
 
     // verify if input is present, and if yes, if it is consistant
     if(inputFocal.length())
@@ -142,14 +143,13 @@ int main(int argc, char** argv) {
     lf_Real_t lfpy0  = 0.0;
 
     /* Creation and verification of the descriptor */
-    std::string  data("/data/");
-    char *c_data = new char[data.length() + 1];
-    std::strcpy(c_data, data.c_str());
+    char *c_mount_point = new char[mount_point.length() + 1];
+    std::strcpy(c_mount_point, mount_point.c_str());
 
     char *c_mac = new char[mac_address.length() + 1];
     std::strcpy(c_mac, mac_address.c_str());
 
-    if ( lf_parse( (unsigned char*)c_mac, (unsigned char*)c_data, & lfDesc ) == LF_TRUE ) {
+    if ( lf_parse( (unsigned char*)c_mac, (unsigned char*)c_mount_point, & lfDesc ) == LF_TRUE ) {
 
       /* Query number width and height of sensor image */
       lfWidth  = lf_query_pixelCorrectionWidth ( sensor_index, & lfDesc );
