@@ -130,6 +130,7 @@ set(GNOPROJ_LIBRARY_LIST
 add_executable(gnoproj gnoproj.cpp)
 target_link_libraries(gnoproj
   ${GNOPROJ_LIBRARY_LIST}
+  libboost_program_options
 )
 
 add_dependencies(gnoproj libgnomonic libfastcal)

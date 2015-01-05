@@ -43,23 +43,46 @@
 #ifndef GNOPROJ_HPP_
 #define GNOPROJ_HPP_
 
-#include <iostream>
-#include <iomanip>
 #include <gnomonic-all.h>
 #include <fastcal-all.h>
 #include <inter-all.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <vector>
-#include <stdlib.h>
-#include <string.h>
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgcodecs/imgcodecs_c.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
 
 #define DEBUG 0
+
+
+const double MinFocal = 0.05;
+const double MaxFocal = 500.0;
+
+
+/**
+ *  Sensor Data:
+ *  Gather all data from the sensor.
+ **/
+struct SensorData {
+    lf_Descriptor_t desc;
+
+    lf_Size_t width             = 0;
+    lf_Size_t height            = 0;
+
+    lf_Size_t imageFullWidth    = 0;
+    lf_Size_t imageFullHeight   = 0;
+    lf_Size_t xPosition         = 0;
+    lf_Size_t yPosition         = 0;
+
+    lf_Real_t focalLength       = 0.0;
+    lf_Real_t pixelSize         = 0.0;
+    lf_Real_t azimuth           = 0.0;
+    lf_Real_t heading           = 0.0;
+    lf_Real_t elevation         = 0.0;
+    lf_Real_t roll              = 0.0;
+
+    lf_Real_t px0               = 0.0;
+    lf_Real_t py0               = 0.0;
+
+    //! Return true if success
+    bool parse (unsigned sensorIndex, const std::string& macAdress,
+                    const std::string& mountPoint);
+};
+
 
 #endif /* GNOPROJ_HPP_ */

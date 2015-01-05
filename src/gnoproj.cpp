@@ -40,220 +40,254 @@
  *      Attribution" section of <http://foxel.ch/license>.
  */
 
+#include <iostream>
+#include <cstdlib>
+#include <string>
+#include <boost/program_options.hpp>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 #include "gnoproj.hpp"
-#include <cstring>
 
-using namespace std;
-using namespace cv;
 
-/**
- * Split an input string with a delimiter and fill a string vector
- */
-static bool split ( const std::string src, const std::string& delim, std::vector<std::string>& vec_value )
-{
-  bool bDelimiterExist = false;
-  if ( !delim.empty() )
-  {
-    vec_value.clear();
-    std::string::size_type start = 0;
-    std::string::size_type end = std::string::npos -1;
-    while ( end != std::string::npos )
+typedef std::string string;
+
+
+/******************************************************************************
+ *  ProgramOptions
+ *****************************************************************************/
+struct ProgramOptions {
+    string     mac;
+    string     mountPoint;
+    string     input;
+    string     output;
+    unsigned        sensorIndex = 0;
+    double          focal = 0.0;
+    bool            hasSensorIndex = false;
+    bool            hasFocal = false;
+
+
+    void parse (int argc, char** argv)
     {
-      end = src.find ( delim, start );
-      vec_value.push_back ( src.substr ( start, end - start ) );
-      start = end + delim.size();
+        namespace po = boost::program_options;
+        po::options_description desc("Options");
+        desc.add_options()
+            ("help,h",      "help message")
+            ("input,i",     po::value<string>(&input)->required(), "input filename")
+            ("mac,a",       po::value<string>(&mac)->required(), "mac address")
+            ("mount,m",     po::value<string>(&mountPoint)->required(), "mount point")
+            ("output,o",    po::value<string>(&output), "output filename")
+            ("sensor,s",    po::value<unsigned>(&sensorIndex),
+                            "sensor index (default: try to determine it using filename")
+            ("focal",       po::value<double>(&focal)->notifier([](const double& v) {
+                                if (v < MinFocal || v > MaxFocal)
+                                    throw string("Focal must be between "
+                                                        + std::to_string(MinFocal) + " and "
+                                                        + std::to_string(MaxFocal));
+                            }),
+                            ("focal (if not given use elphel method). Focal must be between "
+                            + std::to_string(MinFocal) + " and " + std::to_string(MaxFocal)).c_str()
+            )
+            ;
+
+         po::positional_options_description posOptions;
+         posOptions.add("input", 1);
+         posOptions.add("mac", 1);
+         posOptions.add("mount", 1);
+         posOptions.add("output", 1);
+
+
+        // a bit horrible, but for later use, make this class reusable in header
+        // without need to include program options
+        auto printUsage = [&](string e = "") {
+            std::cout << argv[0] << " [options] ";
+
+            for(unsigned i = 0; i <  posOptions.max_total_count(); i++)
+                posOptions.name_for_position(i);
+
+            std::cout << std::endl
+                      << e << std::endl         // optional error or message
+                      << desc << std::endl;     // description
+        };
+
+        try
+        {
+            po::variables_map vm;
+            po::store(po::command_line_parser(argc, argv).options(desc)
+                        .positional(posOptions).run(), vm);
+            po::notify(vm);
+
+            // Usage
+            if (vm.count("help")) {
+                printUsage();
+                std::exit(0);
+            }
+
+            hasFocal = vm.count("focal");
+            hasSensorIndex = vm.count("sensor");
+        }
+        catch(boost::program_options::required_option& e)
+        {
+           printUsage(std::string("Error: ") + e.what());
+           std::exit(1);
+        }
+        catch(boost::program_options::error& e)
+        {
+           printUsage(std::string("Error: ") + e.what());
+           std::exit(1);
+        }
+        catch(string& e) {
+           printUsage(std::string("Error: ") + e);
+           std::exit(1);
+        }
     }
-    if ( vec_value.size() >= 2 )
-      bDelimiterExist = true;
-  }
-  return bDelimiterExist;
+};
+
+
+/******************************************************************************
+ *  SensorData
+ *****************************************************************************/
+bool
+SensorData::parse (unsigned sensorIndex, const string& mac, const string& mountPoint)
+{
+    auto r = lf_parse(  mac.c_str(),
+                        mountPoint.c_str(),
+                        &desc);
+
+    if(r != LF_TRUE)
+        return false;
+
+    /* Query number width and height of sensor image */
+    width  = lf_query_pixelCorrectionWidth ( sensorIndex, &desc );
+    height = lf_query_pixelCorrectionHeight( sensorIndex, &desc );
+
+    /* Query focal length of camera sensor index */
+    focalLength = lf_query_focalLength( sensorIndex , &desc );
+    pixelSize   = lf_query_pixelSize  ( sensorIndex , &desc );
+
+    /* Query angles used for gnomonic rotation */
+    azimuth     = lf_query_azimuth    ( sensorIndex , &desc );
+    heading     = lf_query_heading    ( sensorIndex , &desc );
+    elevation   = lf_query_elevation  ( sensorIndex , &desc );
+    roll        = lf_query_roll       ( sensorIndex , &desc );
+
+    /* Query principal point */
+    px0  = lf_query_px0 ( sensorIndex , &desc );
+    py0  = lf_query_py0 ( sensorIndex , &desc );
+
+    /* Query information related to panoramas */
+    imageFullWidth  = lf_query_ImageFullWidth ( sensorIndex , &desc );
+    imageFullHeight = lf_query_ImageFullLength( sensorIndex , &desc );
+    xPosition       = lf_query_XPosition( sensorIndex , &desc );
+    yPosition       = lf_query_YPosition( sensorIndex , &desc );
+
+    lf_release( &desc );
+    return true;
 }
 
-// main executable
 
-int main(int argc, char** argv) {
 
-    /* Usage branch */
-    if ( argc < 4 || argc > 5 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
-        /* Display help */
-        printf( "Usage : %s <input_image>  <camera mac adress>  <mount point> [ <focal> ]\n\n",argv[0]);
+/******************************************************************************
+ *  Main
+ *****************************************************************************/
+void
+ensureOptions (ProgramOptions& options)
+{
+    if(!options.output.size()) {
+        // FIXME: on base code, output name for normalized focal
+        //          has no "_" separator between options.output[0] and [1]
+        auto index = options.input.find('_');
+        index = options.input.find('_', index+1);
+
+        options.output = options.input.substr(0, index) + '-';
+        if(options.hasFocal)
+            options.output += "RECT-CONFOC.tiff";
+        else
+            options.output += "RECT-SENSOR.tiff";
+    }
+
+    if(!options.hasSensorIndex) {
+        // Get the sensor index that is given after the first "-" in input
+        // filename
+        auto index = options.input.find('-');
+        options.sensorIndex = std::stoul(
+                                options.input.substr(index+1),
+                                nullptr, 0);
+    }
+}
+
+
+int
+main (int argc, char** argv)
+{
+    ProgramOptions options;
+    options.parse(argc, argv);
+    ensureOptions(options);
+
+    //-- get data
+    SensorData data;
+    auto r = data.parse(options.sensorIndex, options.mac, options.mountPoint);
+    if (!r) {
+        std::cerr << "Could not read calibration data" << std::endl;
         return 1;
     }
 
-    // load inputs
-    char* input_image_filename=argv[1]; // eqr image (input) filename
-    std::string mac_address(argv[2]);  //mac adress
-    std::string mount_point(argv[3]);  // mount point
-    std::string input_image(input_image_filename);
-    std::string output_image_filename; // output image filename
+    //-- make image using cv
+    auto eqr = cv::imread(options.input, CV_LOAD_IMAGE_COLOR);
+    auto out = cv::Mat(data.width, data.height, CV_8U, eqr.channels());
 
-    // check is a focal length is given, and update method if necessary
-    int  normalizedFocal(0);  // gnomonic projection method. 0 elphel method (default), 1 with constant focal
-    double focal = 0.0;       // focal length (in mm)
-    double minFocal = 0.05 ;  // lower bound for focal length
-    double maxFocal = 500.0;  // upper bound for focal length
-    std::string inputFocal((argc==5)?argv[4]:"");
-
-    // verify if input is present, and if yes, if it is consistant
-    if(inputFocal.length())
-    {
-      focal  = atof(inputFocal.c_str());
-      normalizedFocal = 1;
-
-      // check input focal
-      if( focal < minFocal || focal > maxFocal)
-      {
-        std::cerr << "Focal length is less than " << minFocal << " mm or bigger than " << maxFocal << " mm. ";
-        std::cerr << "Input focal is " << inputFocal << endl;
-        return 0;
-      }
-    }
-
-    // extract channel information from image name
-    std::vector<string>  splitted_name;
-    std::vector<string>  out_split;
-
-    split( input_image, "-", splitted_name );
-    split( input_image, "_", out_split );
-
-    int sensor_index=atoi(splitted_name[1].c_str());
-
-    // extract information related to sensor
-    /* Key/value-file descriptor */
-    lf_Descriptor_t lfDesc;
-
-    // calibration data used for gnomonic projection
-    lf_Size_t lfWidth   = 0;
-    lf_Size_t lfHeight  = 0;
-
-    lf_Size_t lfImageFullWidth  = 0;
-    lf_Size_t lfImageFullHeight = 0;
-    lf_Size_t lfXPosition       = 0;
-    lf_Size_t lfYPosition       = 0;
-
-    lf_Real_t lfFocalLength = 0.0;
-    lf_Real_t lfPixelSize   = 0.0;
-    lf_Real_t lfAzimuth     = 0.0;
-    lf_Real_t lfHeading     = 0.0;
-    lf_Real_t lfElevation   = 0.0;
-    lf_Real_t lfRoll        = 0.0;
-
-    lf_Real_t lfpx0  = 0.0;
-    lf_Real_t lfpy0  = 0.0;
-
-    /* Creation and verification of the descriptor */
-    char *c_mount_point = new char[mount_point.length() + 1];
-    std::strcpy(c_mount_point, mount_point.c_str());
-
-    char *c_mac = new char[mac_address.length() + 1];
-    std::strcpy(c_mac, mac_address.c_str());
-
-    if ( lf_parse( (unsigned char*)c_mac, (unsigned char*)c_mount_point, & lfDesc ) == LF_TRUE ) {
-
-      /* Query number width and height of sensor image */
-      lfWidth  = lf_query_pixelCorrectionWidth ( sensor_index, & lfDesc );
-      lfHeight = lf_query_pixelCorrectionHeight( sensor_index, & lfDesc );
-
-      /* Query focal length of camera sensor index */
-      lfFocalLength = lf_query_focalLength( sensor_index , & lfDesc );
-      lfPixelSize   = lf_query_pixelSize  ( sensor_index , & lfDesc );
-
-      /* Query angles used for gnomonic rotation */
-      lfAzimuth     = lf_query_azimuth    ( sensor_index , & lfDesc );
-      lfHeading     = lf_query_heading    ( sensor_index , & lfDesc );
-      lfElevation   = lf_query_elevation  ( sensor_index , & lfDesc );
-      lfRoll        = lf_query_roll       ( sensor_index , & lfDesc );
-
-      /* Query principal point */
-      lfpx0  = lf_query_px0 ( sensor_index , & lfDesc );
-      lfpy0  = lf_query_py0 ( sensor_index , & lfDesc );
-
-      /* Query information related to panoramas */
-      lfImageFullWidth  = lf_query_ImageFullWidth ( sensor_index , & lfDesc );
-      lfImageFullHeight = lf_query_ImageFullLength( sensor_index , & lfDesc );
-      lfXPosition       = lf_query_XPosition( sensor_index , & lfDesc );
-      lfYPosition       = lf_query_YPosition( sensor_index , & lfDesc );
-
-    }
-    else
-    {
-       std::cerr << " Could not read calibration data. " << std::endl;
-       return 1;
-    }
-
-    /* Release descriptor */
-    lf_release( & lfDesc );
-    
-    // load image
-    IplImage* eqr_img = cvLoadImage(input_image_filename, CV_LOAD_IMAGE_COLOR );
-
-    /* Initialize output image structure */
-    IplImage* out_img = cvCreateImage( cvSize( lfWidth, lfHeight ), IPL_DEPTH_8U , eqr_img->nChannels );
-
-    if(!normalizedFocal){
+    if(options.hasFocal) {
         /* Gnomonic projection of the equirectangular tile */
-        lg_ttg_elphel(
-            ( inter_C8_t *) eqr_img->imageData,
-            eqr_img->width,
-            eqr_img->height,
-            eqr_img->nChannels,
-            ( inter_C8_t *) out_img->imageData,
-            out_img->width,
-            out_img->height,
-            out_img->nChannels,
-            lfpx0,
-            lfpy0,
-            lfImageFullWidth,
-            lfImageFullHeight-1, // there's an extra pixel for wrapping
-            lfXPosition,
-            lfYPosition,
-            lfRoll,
-            lfAzimuth,
-            lfElevation,
-            lfHeading,
-            lfPixelSize,
-            lfFocalLength,
+        lg_ttg_center(
+            eqr.ptr(),
+            eqr.cols,
+            eqr.rows,
+            eqr.channels(),
+            out.ptr(),
+            out.cols,
+            out.rows,
+            out.channels(),
+            data.imageFullWidth,
+            data.imageFullHeight-1,
+            data.xPosition,
+            data.yPosition,
+            data.azimuth + data.heading + LG_PI,
+            data.elevation,
+            data.roll,
+            options.focal,
+            data.pixelSize,
             li_bicubicf
         );
-
-        // create output image name
-        output_image_filename+=out_split[0]+"_"+out_split[1]+"-RECT-SENSOR.tiff";
     }
-    else
-    {
-      /* Gnomonic projection of the equirectangular tile */
-       lg_ttg_center(
-          ( inter_C8_t *) eqr_img->imageData,
-          eqr_img->width,
-          eqr_img->height,
-          eqr_img->nChannels,
-          ( inter_C8_t *) out_img->imageData,
-          out_img->width,
-          out_img->height,
-          out_img->nChannels,
-          lfImageFullWidth,
-          lfImageFullHeight-1,
-          lfXPosition,
-          lfYPosition,
-          lfAzimuth + lfHeading + LG_PI,
-          lfElevation,
-          lfRoll,
-          focal,
-          lfPixelSize,
-          li_bicubicf
+    else {
+        /* Gnomonic projection of the equirectangular tile */
+        lg_ttg_elphel(
+            eqr.ptr(),
+            eqr.cols,
+            eqr.rows,
+            eqr.channels(),
+            out.ptr(),
+            out.cols,
+            out.rows,
+            out.channels(),
+            data.px0,
+            data.py0,
+            data.imageFullWidth,
+            data.imageFullHeight-1, // there's an extra pixel for wrapping
+            data.xPosition,
+            data.yPosition,
+            data.roll,
+            data.azimuth,
+            data.elevation,
+            data.heading,
+            data.pixelSize,
+            data.focalLength,
+            li_bicubicf
         );
-
-        // create output image name
-        output_image_filename+=out_split[0]+out_split[1]+"-RECT-CONFOC.tiff";
     }
 
     /* Gnomonic image exportation */
-    cvSaveImage(output_image_filename.c_str() , out_img, NULL );
-
-    /* Free memory */
-    cvReleaseImage(&eqr_img);
-    cvReleaseImage(&out_img);
-
+    cv::imwrite(options.output, out);
     return 0;
 }
