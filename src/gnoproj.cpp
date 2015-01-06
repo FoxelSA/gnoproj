@@ -43,7 +43,6 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
-#include <boost/program_options.hpp>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -58,10 +57,10 @@ typedef std::string string;
  *  ProgramOptions
  *****************************************************************************/
 struct ProgramOptions {
-    string     mac;
-    string     mountPoint;
-    string     input;
-    string     output;
+    string          mac;
+    string          mountPoint;
+    string          input;
+    string          output;
     unsigned        sensorIndex = 0;
     double          focal = 0.0;
     bool            hasSensorIndex = false;
@@ -70,70 +69,71 @@ struct ProgramOptions {
 
     void parse (int argc, char** argv)
     {
-        namespace po = boost::program_options;
-        po::options_description desc("Options");
-        desc.add_options()
-            ("help,h",      "help message")
-            ("input,i",     po::value<string>(&input)->required(), "input filename")
-            ("mac,a",       po::value<string>(&mac)->required(), "mac address")
-            ("mount,m",     po::value<string>(&mountPoint)->required(), "mount point")
-            ("output,o",    po::value<string>(&output), "output filename")
-            ("sensor,s",    po::value<unsigned>(&sensorIndex),
-                            "sensor index (default: try to determine it using filename")
-            ("focal",       po::value<double>(&focal)->notifier([](const double& v) {
-                                if (v < MinFocal || v > MaxFocal)
-                                    throw string("Focal must be between "
-                                                        + std::to_string(MinFocal) + " and "
-                                                        + std::to_string(MaxFocal));
-                            }),
-                            ("focal (if not given use elphel method). Focal must be between "
-                            + std::to_string(MinFocal) + " and " + std::to_string(MaxFocal)).c_str()
-            )
-            ;
-
-         po::positional_options_description posOptions;
-         posOptions.add("input", 1);
-         posOptions.add("mac", 1);
-         posOptions.add("mount", 1);
-         posOptions.add("output", 1);
-
-
         // a bit horrible, but for later use, make this class reusable in header
         // without need to include program options
         auto printUsage = [&](string e = "") {
-            std::cout << argv[0] << " [options] ";
+            std::cout << argv[0]
+                      << " input_file mac_address mount_point "
+                      << "[-f focal] [-s sensor] [-o output_file]"
+                      << std::endl;
 
-            for(unsigned i = 0; i <  posOptions.max_total_count(); i++)
-                posOptions.name_for_position(i);
-
-            std::cout << std::endl
-                      << e << std::endl         // optional error or message
-                      << desc << std::endl;     // description
+            if(e.size())
+                std::cout << std::endl << e << std::endl;
         };
+
 
         try
         {
-            po::variables_map vm;
-            po::store(po::command_line_parser(argc, argv).options(desc)
-                        .positional(posOptions).run(), vm);
-            po::notify(vm);
+            std::vector<string> args(argv, argv + argc);
+            int k = 0;
+            for(auto i = 0u; i < args.size(); i++) {
+                auto& s = args[i];
 
-            // Usage
-            if (vm.count("help")) {
-                printUsage();
-                std::exit(0);
+                // sensor index
+                if (s == "-s") {
+                    sensorIndex     = std::stoul(args.at(i+1));
+                    hasSensorIndex  = true;
+                    ++i;
+                }
+
+                // focal
+                if (s == "-f") {
+                    focal           = std::stod(args.at(i+1));
+                    hasFocal        = true;
+
+                    if (focal < MinFocal || focal > MaxFocal)
+                        throw string("Focal must be between "
+                                        + std::to_string(MinFocal) + " and "
+                                        + std::to_string(MaxFocal));
+
+                    ++i;
+                }
+
+                // output file
+                if (s == "-o") {
+                    output          = args.at(i+1);
+                    ++i;
+                }
+
+                // help
+                if (s == "-h" || s == "--help") {
+                    printUsage();
+                    ++i;
+                }
+
+                // avoid storing a vector of references and so on
+                switch(k) {
+                    case 0: input       = s; break;
+                    case 1: mac         = s; break;
+                    case 2: mountPoint  = s; break;
+                }
+                k++;
             }
 
-            hasFocal = vm.count("focal");
-            hasSensorIndex = vm.count("sensor");
+            if(k < 3)
+                throw string("missing arguments");
         }
-        catch(boost::program_options::required_option& e)
-        {
-           printUsage(std::string("Error: ") + e.what());
-           std::exit(1);
-        }
-        catch(boost::program_options::error& e)
-        {
+        catch(std::exception& e) {
            printUsage(std::string("Error: ") + e.what());
            std::exit(1);
         }
