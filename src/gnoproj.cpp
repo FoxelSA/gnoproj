@@ -151,8 +151,8 @@ struct ProgramOptions {
 bool
 SensorData::parse (unsigned sensorIndex, const string& mac, const string& mountPoint)
 {
-    auto r = lf_parse(  mac.c_str(),
-                        mountPoint.c_str(),
+    auto r = lf_parse(  reinterpret_cast<const uint8_t*>(mac.c_str()),
+                        reinterpret_cast<const uint8_t*>(mountPoint.c_str()),
                         &desc);
 
     if(r != LF_TRUE)
