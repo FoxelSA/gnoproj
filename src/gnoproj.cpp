@@ -43,6 +43,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
+#include <memory>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -234,20 +235,23 @@ main (int argc, char** argv)
     }
 
     //-- make image using cv
-    auto eqr = cv::imread(options.input, CV_LOAD_IMAGE_COLOR);
-    auto out = cv::Mat(data.width, data.height, CV_8U, eqr.channels());
+    auto deleter = [](IplImage* i) { cvReleaseImage(&i); };
+    std::unique_ptr<IplImage, decltype(deleter)>
+        eqr ( cvLoadImage(options.input.c_str(), CV_LOAD_IMAGE_COLOR ) , deleter )
+      , out ( cvCreateImage( cvSize( data.width, data.height ), IPL_DEPTH_8U,
+                                    eqr->nChannels ) , deleter );
 
     if(options.hasFocal) {
         /* Gnomonic projection of the equirectangular tile */
         lg_ttg_center(
-            eqr.ptr(),
-            eqr.cols,
-            eqr.rows,
-            eqr.channels(),
-            out.ptr(),
-            out.cols,
-            out.rows,
-            out.channels(),
+            reinterpret_cast<li_C8_t*>(eqr->imageData),
+            eqr->width,
+            eqr->height,
+            eqr->nChannels,
+            reinterpret_cast<li_C8_t*>(out->imageData),
+            out->width,
+            out->height,
+            out->nChannels,
             data.imageFullWidth,
             data.imageFullHeight-1,
             data.xPosition,
@@ -263,14 +267,14 @@ main (int argc, char** argv)
     else {
         /* Gnomonic projection of the equirectangular tile */
         lg_ttg_elphel(
-            eqr.ptr(),
-            eqr.cols,
-            eqr.rows,
-            eqr.channels(),
-            out.ptr(),
-            out.cols,
-            out.rows,
-            out.channels(),
+            reinterpret_cast<li_C8_t*>(eqr->imageData),
+            eqr->width,
+            eqr->height,
+            eqr->nChannels,
+            reinterpret_cast<li_C8_t*>(out->imageData),
+            out->width,
+            out->height,
+            out->nChannels,
             data.px0,
             data.py0,
             data.imageFullWidth,
@@ -288,6 +292,6 @@ main (int argc, char** argv)
     }
 
     /* Gnomonic image exportation */
-    cv::imwrite(options.output, out);
+    cvSaveImage(options.output.c_str(), out.get(), NULL );
     return 0;
 }
