@@ -1,7 +1,7 @@
 /*
  * gnoproj
  *
- * Copyright (c) 2013-2014 FOXEL SA - http://foxel.ch
+ * Copyright (c) 2013-2015 FOXEL SA - http://foxel.ch
  * Please read <http://foxel.ch/license> for more information.
  *
  *
@@ -42,40 +42,22 @@
 
 
 #include "gnoproj.hpp"
+#include "tools.hpp"
 #include <cstring>
 
 using namespace std;
 using namespace cv;
 
-/**
+/*********************************************************************
  * Split an input string with a delimiter and fill a string vector
+ *
+ *********************************************************************
  */
-static bool split ( const std::string src, const std::string& delim, std::vector<std::string>& vec_value )
-{
-  bool bDelimiterExist = false;
-  if ( !delim.empty() )
-  {
-    vec_value.clear();
-    std::string::size_type start = 0;
-    std::string::size_type end = std::string::npos -1;
-    while ( end != std::string::npos )
-    {
-      end = src.find ( delim, start );
-      vec_value.push_back ( src.substr ( start, end - start ) );
-      start = end + delim.size();
-    }
-    if ( vec_value.size() >= 2 )
-      bDelimiterExist = true;
-  }
-  return bDelimiterExist;
-}
-
-// main executable
 
 int main(int argc, char** argv) {
 
     /* Usage branch */
-    if ( argc < 4 || argc > 5 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
+    if ( argc != 4 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
         /* Display help */
         printf( "Usage : %s <input_image>  <camera mac adress>  <mount point> [ <focal> ]\n\n",argv[0]);
         return 1;
@@ -184,7 +166,7 @@ int main(int argc, char** argv) {
 
     /* Release descriptor */
     lf_release( & lfDesc );
-    
+
     // load image
     IplImage* eqr_img = cvLoadImage(input_image_filename, CV_LOAD_IMAGE_COLOR );
 
