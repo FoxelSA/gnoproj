@@ -99,79 +99,20 @@ int main(int argc, char** argv) {
     split( input_image, "-", splitted_name );
     split( input_image, "_", out_split );
 
-    int sensor_index=atoi(splitted_name[1].c_str());
+    const size_t sensor_index=atoi(splitted_name[1].c_str());
+    sensorData   sensorSD;
 
-    // extract information related to sensor
-    /* Key/value-file descriptor */
-    lf_Descriptor_t lfDesc;
-
-    // calibration data used for gnomonic projection
-    lf_Size_t lfWidth   = 0;
-    lf_Size_t lfHeight  = 0;
-
-    lf_Size_t lfImageFullWidth  = 0;
-    lf_Size_t lfImageFullHeight = 0;
-    lf_Size_t lfXPosition       = 0;
-    lf_Size_t lfYPosition       = 0;
-
-    lf_Real_t lfFocalLength = 0.0;
-    lf_Real_t lfPixelSize   = 0.0;
-    lf_Real_t lfAzimuth     = 0.0;
-    lf_Real_t lfHeading     = 0.0;
-    lf_Real_t lfElevation   = 0.0;
-    lf_Real_t lfRoll        = 0.0;
-
-    lf_Real_t lfpx0  = 0.0;
-    lf_Real_t lfpy0  = 0.0;
-
-    /* Creation and verification of the descriptor */
-    char *c_mount_point = new char[mount_point.length() + 1];
-    std::strcpy(c_mount_point, mount_point.c_str());
-
-    char *c_mac = new char[mac_address.length() + 1];
-    std::strcpy(c_mac, mac_address.c_str());
-
-    if ( lf_parse( (unsigned char*)c_mac, (unsigned char*)c_mount_point, & lfDesc ) == LF_TRUE ) {
-
-      /* Query number width and height of sensor image */
-      lfWidth  = lf_query_pixelCorrectionWidth ( sensor_index, & lfDesc );
-      lfHeight = lf_query_pixelCorrectionHeight( sensor_index, & lfDesc );
-
-      /* Query focal length of camera sensor index */
-      lfFocalLength = lf_query_focalLength( sensor_index , & lfDesc );
-      lfPixelSize   = lf_query_pixelSize  ( sensor_index , & lfDesc );
-
-      /* Query angles used for gnomonic rotation */
-      lfAzimuth     = lf_query_azimuth    ( sensor_index , & lfDesc );
-      lfHeading     = lf_query_heading    ( sensor_index , & lfDesc );
-      lfElevation   = lf_query_elevation  ( sensor_index , & lfDesc );
-      lfRoll        = lf_query_roll       ( sensor_index , & lfDesc );
-
-      /* Query principal point */
-      lfpx0  = lf_query_px0 ( sensor_index , & lfDesc );
-      lfpy0  = lf_query_py0 ( sensor_index , & lfDesc );
-
-      /* Query information related to panoramas */
-      lfImageFullWidth  = lf_query_ImageFullWidth ( sensor_index , & lfDesc );
-      lfImageFullHeight = lf_query_ImageFullLength( sensor_index , & lfDesc );
-      lfXPosition       = lf_query_XPosition( sensor_index , & lfDesc );
-      lfYPosition       = lf_query_YPosition( sensor_index , & lfDesc );
-
-    }
-    else
-    {
-       std::cerr << " Could not read calibration data. " << std::endl;
-       return 1;
-    }
-
-    /* Release descriptor */
-    lf_release( & lfDesc );
+    bool  bLoadCalibration = loadCalibrationData
+                   ( sensorSD,
+                     sensor_index,
+                     mount_point,
+                     mac_address );
 
     // load image
     IplImage* eqr_img = cvLoadImage(input_image_filename, CV_LOAD_IMAGE_COLOR );
 
     /* Initialize output image structure */
-    IplImage* out_img = cvCreateImage( cvSize( lfWidth, lfHeight ), IPL_DEPTH_8U , eqr_img->nChannels );
+    IplImage* out_img = cvCreateImage( cvSize( sensorSD.lfWidth, sensorSD.lfHeight ), IPL_DEPTH_8U , eqr_img->nChannels );
 
     if(!normalizedFocal){
         /* Gnomonic projection of the equirectangular tile */
@@ -184,18 +125,18 @@ int main(int argc, char** argv) {
             out_img->width,
             out_img->height,
             out_img->nChannels,
-            lfpx0,
-            lfpy0,
-            lfImageFullWidth,
-            lfImageFullHeight-1, // there's an extra pixel for wrapping
-            lfXPosition,
-            lfYPosition,
-            lfRoll,
-            lfAzimuth,
-            lfElevation,
-            lfHeading,
-            lfPixelSize,
-            lfFocalLength,
+            sensorSD.lfpx0,
+            sensorSD.lfpy0,
+            sensorSD.lfImageFullWidth,
+            sensorSD.lfImageFullHeight-1, // there's an extra pixel for wrapping
+            sensorSD.lfXPosition,
+            sensorSD.lfYPosition,
+            sensorSD.lfRoll,
+            sensorSD.lfAzimuth,
+            sensorSD.lfElevation,
+            sensorSD.lfHeading,
+            sensorSD.lfPixelSize,
+            sensorSD.lfFocalLength,
             li_bicubicf
         );
 
@@ -214,15 +155,15 @@ int main(int argc, char** argv) {
           out_img->width,
           out_img->height,
           out_img->nChannels,
-          lfImageFullWidth,
-          lfImageFullHeight-1,
-          lfXPosition,
-          lfYPosition,
-          lfAzimuth + lfHeading + LG_PI,
-          lfElevation,
-          lfRoll,
+          sensorSD.lfImageFullWidth,
+          sensorSD.lfImageFullHeight-1,
+          sensorSD.lfXPosition,
+          sensorSD.lfYPosition,
+          sensorSD.lfAzimuth + sensorSD.lfHeading + LG_PI,
+          sensorSD.lfElevation,
+          sensorSD.lfRoll,
           focal,
-          lfPixelSize,
+          sensorSD.lfPixelSize,
           li_bicubicf
         );
 

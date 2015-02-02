@@ -106,39 +106,37 @@ struct sensorData
 *
 **********************************************************************/
 
-bool  loadCalibrationData( std::vector < sensorData > & vec_sensorData,
+bool  loadCalibrationData( sensorData & sD,
+            const size_t      & sensor_index,
             const std::string & sMountPoint,
             const std::string & smacAddress)
 {
 
-  /* Key/value-file descriptor */
-  lf_Descriptor_t lfDesc;
-  lf_Size_t       lfChannels=0;
+    /* Key/value-file descriptor */
+    lf_Descriptor_t lfDesc;
+    lf_Size_t       lfChannels=0;
 
-  /* Creation and verification of the descriptor */
-  char *c_data = new char[sMountPoint.length() + 1];
-  std::strcpy(c_data, sMountPoint.c_str());
+    /* Creation and verification of the descriptor */
+    char *c_data = new char[sMountPoint.length() + 1];
+    std::strcpy(c_data, sMountPoint.c_str());
 
-  char *c_mac = new char[smacAddress.length() + 1];
-  std::strcpy(c_mac, smacAddress.c_str());
+    char *c_mac = new char[smacAddress.length() + 1];
+    std::strcpy(c_mac, smacAddress.c_str());
 
-  // check input data validity
-  if ( lf_parse( (unsigned char*)c_mac, (unsigned char*)c_data, & lfDesc ) == LF_TRUE ) {
+    // check input data validity
+    if ( lf_parse( (unsigned char*)c_mac, (unsigned char*)c_data, & lfDesc ) == LF_TRUE ) {
 
-    /* Query number of camera channels */
+      /* Query number of camera channels */
+      lfChannels = lf_query_channels( & lfDesc );
+    }
+    else
+    {
+      std::cerr << " Could not read calibration data. " << std::endl;
+      return false;
+    }
+
     lfChannels = lf_query_channels( & lfDesc );
-  }
-  else
-  {
-    std::cerr << " Could not read calibration data. " << std::endl;
-    return false;
-  }
 
-  lfChannels = lf_query_channels( & lfDesc );
-
-  for( lf_Size_t sensor_index = 0 ; sensor_index < lfChannels ; ++sensor_index )
-  {
-    sensorData  sD;
 
     // query panorama width and height
     sD.lfImageFullWidth  = lf_query_ImageFullWidth ( sensor_index, & lfDesc );
@@ -174,13 +172,10 @@ bool  loadCalibrationData( std::vector < sensorData > & vec_sensorData,
     sD.lfCheight  = lf_query_height               ( sensor_index , & lfDesc );
     sD.lfEntrance = lf_query_entrancePupilForward ( sensor_index , & lfDesc );
 
-    vec_sensorData.push_back(sD);
-  }
+    /* Release descriptor */
+    lf_release( & lfDesc );
 
-  /* Release descriptor */
-  lf_release( & lfDesc );
-
-  return true;
+    return true;
 };
 
 #endif
