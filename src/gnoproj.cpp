@@ -102,11 +102,18 @@ int main(int argc, char** argv) {
     const size_t sensor_index=atoi(splitted_name[1].c_str());
     sensorData   sensorSD;
 
+    // load calibration informations
     bool  bLoadCalibration = loadCalibrationData
                    ( sensorSD,
                      sensor_index,
                      mount_point,
                      mac_address );
+
+    if( !bLoadCalibration )
+    {
+        std::cerr << " Failed to load calibration informations. Exit " << std::endl;
+        return -1;
+    }
 
     // load image
     IplImage* eqr_img = cvLoadImage(input_image_filename, CV_LOAD_IMAGE_COLOR );
