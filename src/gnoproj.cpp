@@ -55,6 +55,55 @@ using namespace cv;
 *******************************************************************************
 */
 
+/*! \file gnoproj.cpp
+* \author Stephane Flotron <s.flotron@foxel.ch>
+*
+* software main function
+*/
+
+/*! \mainpage gnoproj
+* \section gnoproj
+*
+* Gnomonic reprojection software for equirectangular images from ElphelPHG cameras
+*
+* \section Documentation
+*
+* Documentation can be consulted on the [wiki](https://github.com/FoxelSA/gnoproj/wiki).
+*
+* \section Copyright
+*
+* Copyright (c) 2013-2014 FOXEL SA - [http://foxel.ch](http://foxel.ch)<br />
+* This program is part of the FOXEL project <[http://foxel.ch](http://foxel.ch)>.
+*
+* Please read the [COPYRIGHT.md](COPYRIGHT.md) file for more information.
+*
+* \section License
+*
+* This program is licensed under the terms of the
+* [GNU Affero General Public License v3](http://www.gnu.org/licenses/agpl.html)
+* (GNU AGPL), with two additional terms. The content is licensed under the terms
+* of the [Creative Commons Attribution-ShareAlike 4.0 International](http://creativecommons.org/licenses/by-sa/4.0/)
+* (CC BY-SA) license.
+*
+* You must read <[http://foxel.ch/license](http://foxel.ch/license)> for more
+*information about our Licensing terms and our Usage and Attribution guidelines.
+*
+*/
+
+/*! \brief Main software function
+*
+* This function takes a sensor as input and load all calibration
+* needed for gnomonic projection.
+*
+* \param input_image   Name of the EQR image you want to project
+* \param mac_address   Mac address of the elphel camera that take the photo
+* \param mount_point   Mount point of the camera folder on your machine
+* \param focal         (optionnal) Focal length in mm that you want to use
+*                      for gnomonic projection with constant focal
+*
+* \return 0 if all was well, 1 in other cases.
+*/
+
 int main(int argc, char** argv) {
 
     /* Usage branch */
