@@ -23,7 +23,7 @@
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# along with this program. if not, see <http://www.gnu.org/licenses/>.
 #
 #
 # Additional Terms:
@@ -52,7 +52,7 @@ set(GNOPROJ_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 # ==============================================================================
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(warnings "-Wall -Wextra -Werror")
+    set(warnings "-Wall -Wextra ")
     set(cxx_flags "-std=c++11")
 endif()
 
@@ -64,12 +64,24 @@ if (NOT CONFIGURED_ONCE)
 endif()
 
 # ==============================================================================
+# add a target to generate API documentation with Doxygen
+# ===============================================================================
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+  add_custom_target(doc
+        ${DOXYGEN_EXECUTABLE} ${GNOPROJ_SOURCE_DIR}/Doxyfile
+        WORKING_DIRECTORY .. 
+        COMMENT "Generating API documentation with Doxygen" VERBATIM
+  )
+endif(DOXYGEN_FOUND)
+
+# ==============================================================================
 # OpenMP detection (needed by libgnomonic)
 # ==============================================================================
-FIND_PACKAGE(OpenMP)
-IF (OPENMP_FOUND)
+find_package(OpenMP)
+if (OPENMP_FOUND)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
- ENDIF (OPENMP_FOUND)
+ endif (OPENMP_FOUND)
 
 # ==============================================================================
 # OpenCV / pkgconfig  detection
