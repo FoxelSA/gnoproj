@@ -42,8 +42,6 @@
 
   /*! \file tools.hpp
    * \author Stephane Flotron <s.flotron@foxel.ch>
-   *
-   * Software main header
    */
   /*! \mainpage gnoproj
    * \section gnoproj
@@ -160,6 +158,19 @@ struct sensorData
 *
 **********************************************************************/
 
+/*! \brief Calibration data loading
+*
+* This function takes a sensor as input and load all calibration
+* needed for gnomonic projection.
+*
+* \param sD             An object sensorData that will be affected with calibration data
+* \param sensor_index   the sensor index of elphel camera (between 0 and Channels-1)
+* \param sMountPoint    The mount point of the camera folder
+* \param smacAddress    The mac address of the considered elphel camera
+*
+* \return bool value that says if the loading was sucessfull or not
+*/
+
 bool  loadCalibrationData( sensorData & sD,
             const size_t      & sensor_index,
             const std::string & sMountPoint,
@@ -239,6 +250,20 @@ bool  loadCalibrationData( sensorData & sD,
 *  call to libgnomonic for projection
 *
 **********************************************************************/
+
+/*! \brief EQR to gnomonic projection
+*
+* This function takes an EQR image and apply a gnomonic projection in order
+* to retreive the original sensor image.
+*
+* \param  input_image      Name of EQR input image
+* \param  mount_point      The mount point of the camera folder
+* \param  mac_address      The mac address of the considered elphel camera
+* \param  normalizedFocal  0 or 1. If 1, use normalized focal, else use calibration focal length
+* \param  focal            Focal Length in mm
+*
+* \return bool value that says if the projection was sucessfull or not
+*/
 
 bool  eqrToGnomonic (
             const std::string & input_image,
