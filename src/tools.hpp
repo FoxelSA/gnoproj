@@ -87,7 +87,7 @@ using namespace cv;
 * sensorData
 *****************************************************************************/
 
-/*! \struct sensor Data
+/*! \struct sensorData
 * \brief structure used to store calibration information
 *
 * This structure is designed to store the needed informations coming from
@@ -97,6 +97,38 @@ using namespace cv;
 *  Width of sensor image
 * \var sensorData::lfHeight
 *  Height of sensor image
+* \var sensorData::lfChannels
+*  Number of channels of elphel camera
+* \var sensorData::lfXPosition
+*  X coordinate of left corner of EQR tile in panorama
+* \var sensorData::lfYPosition
+*  Y coordinate of left corner of EQR tile in panorama
+* \var sensorData::lfImageFullWidth
+*  Sitched EQR panorama width
+* \var sensorData::lfImageFullHeight
+*  Sitched EQR panorama height
+* \var sensorData::lfFocalLength
+*  Focal length in mm
+* \var sensorData::lfPixelSize
+*  pixel size in mm
+* \var sensorData::lfAzimuth
+*  azimuth angle in elphel coordinate frame (in radian)
+* \var sensorData::lfHeading
+*  heading angle in elphel coordinate frame (in radian)
+* \var sensorData::lfElevation
+*  Elevation angle in elphel coordinate frame (in radian)
+* \var sensorData::lfRoll
+*  roll around z axis (in radian)
+* \var sensorData::lfpx0
+*  x coordinate of principal point of sensor image, in pixels
+* \var sensorData::lfpy0
+*  y coordinate of principal point of sensor image, in pixels
+* \var sensorData::lfRadius
+*  radius of optical center of channel in elphel coordinate frame
+* \var sensorData::lfCheight
+*  height of optical center of channel in elphel coordinate frame
+* \var sensorData::lfEntrance
+*  Entrance pupil forward of channel
 */
 
 struct sensorData
@@ -108,8 +140,6 @@ struct sensorData
   lf_Size_t   lfYPosition = 0;
   lf_Size_t   lfImageFullWidth  = 0;
   lf_Size_t   lfImageFullHeight = 0;
-  lf_Size_t   lfpixelCorrectionWidth  = 0;
-  lf_Size_t   lfpixelCorrectionHeight = 0;
 
   lf_Real_t   lfFocalLength = 0.0;
   lf_Real_t   lfPixelSize   = 0.0;
@@ -162,9 +192,6 @@ bool  loadCalibrationData( sensorData & sD,
             // query panorama width and height
             sD.lfImageFullWidth  = lf_query_ImageFullWidth ( sensor_index, & lfDesc );
             sD.lfImageFullHeight = lf_query_ImageFullLength( sensor_index, & lfDesc );
-
-            sD.lfpixelCorrectionWidth  = lf_query_pixelCorrectionWidth (sensor_index, &lfDesc);
-            sD.lfpixelCorrectionHeight = lf_query_pixelCorrectionHeight(sensor_index, &lfDesc);
 
             /* Query position of eqr tile in panorama */
             sD.lfXPosition = lf_query_XPosition ( sensor_index, & lfDesc );
