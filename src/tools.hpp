@@ -75,7 +75,22 @@
 #ifndef TOOLS_HPP_
 #define TOOLS_HPP_
 
-#include "gnoproj.hpp"
+#include <iostream>
+#include <iomanip>
+#include <gnomonic-all.h>
+#include <fastcal-all.h>
+#include <inter-all.h>
+#include <ctype.h>
+#include <unistd.h>
+#include <vector>
+#include <stdlib.h>
+#include <string.h>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs/imgcodecs_c.h>
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
 #include <cstring>
 
 using namespace std;

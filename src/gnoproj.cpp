@@ -40,8 +40,6 @@
  *      Attribution" section of <http://foxel.ch/license>.
  */
 
-
-#include "gnoproj.hpp"
 #include "tools.hpp"
 #include <cstring>
 
