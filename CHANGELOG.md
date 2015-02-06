@@ -1,3 +1,8 @@
+## 1.1 (February 6, 2015)
+- `FIXED`: Add documentation using Doxygen
+- `FIXED`: Updated submodules
+- `FIXED`: Code cleaning
+
 ## 1.0 (December 17, 2014)
 - `FIXED`: Better access to calibration data
 - `FIXED`: updated submodules
