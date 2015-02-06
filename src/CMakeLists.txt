@@ -47,7 +47,8 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 # ==============================================================================
 add_executable(
        gnoproj
-       gnoproj.cpp)
+       gnoproj.cpp
+       tools.cpp )
 
 target_link_libraries(gnoproj
   ${GNOPROJ_LIBRARY_LIST}
@@ -55,6 +56,6 @@ target_link_libraries(gnoproj
 
 add_dependencies(gnoproj libgnomonic libfastcal)
 
-SET_PROPERTY(TARGET gnoproj PROPERTY FOLDER software)
+set_target_properties( gnoproj PROPERTIES RUNTIME_OUTPUT_DIRECTORY .. )
 
 install(TARGETS gnoproj DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
