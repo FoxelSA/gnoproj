@@ -41,112 +41,20 @@
 # ==============================================================================
 
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-project(gnoproj C CXX)
-set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_BUILD_TYPE Release)
-
-set(GNOPROJ_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-
-# ==============================================================================
-#  C / C++ flags
-# ==============================================================================
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
-    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(warnings "-Wall -Wextra ")
-    set(cxx_flags "-std=c++11")
-endif()
-
-if (NOT CONFIGURED_ONCE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${warnings} ${cxx_flags}"
-        CACHE STRING "Flags used by the compiler during all build types." FORCE)
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} ${warnings}"
-        CACHE STRING "Flags used by the compiler during all build types." FORCE)
-endif()
-
-# ==============================================================================
-# add a target to generate API documentation with Doxygen
-# ===============================================================================
-find_package(Doxygen)
-if(DOXYGEN_FOUND)
-  add_custom_target(doc
-        ${DOXYGEN_EXECUTABLE} ${GNOPROJ_SOURCE_DIR}/Doxyfile
-        WORKING_DIRECTORY .. 
-        COMMENT "Generating API documentation with Doxygen" VERBATIM
-  )
-endif(DOXYGEN_FOUND)
-
-# ==============================================================================
-# OpenMP detection (needed by libgnomonic)
-# ==============================================================================
-find_package(OpenMP)
-if (OPENMP_FOUND)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
- endif (OPENMP_FOUND)
-
-# ==============================================================================
-# OpenCV / pkgconfig  detection
-# ==============================================================================
-find_package(PkgConfig)
-find_package(OpenCV REQUIRED)
-
-# ==============================================================================
-#  submodules Lignomonic and libinter
-# ==============================================================================
-add_custom_target(
-  libgnomonic
-  COMMAND make
-  WORKING_DIRECTORY ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic
-)
-set(LIBGNOMONIC_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/src)
-set(LIBGNOMONIC_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/bin/libgnomonic.a)
-
-# libinter
-set(LIBINTER_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/lib/libinter/src)
-set(LIBINTER_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/libgnomonic/lib/libinter/bin/libinter.a)
-
-# ==============================================================================
-#  submodules libfastcal
-# ==============================================================================
-add_custom_target(
-  libfastcal
-  COMMAND make clean-all && make [OPENMP=false]
-  WORKING_DIRECTORY ${GNOPROJ_SOURCE_DIR}/../lib/libfastcal
-)
-set(LIBFASTCAL_INCLUDE_DIR ${GNOPROJ_SOURCE_DIR}/../lib/libfastcal/src)
-set(LIBFASTCAL_LIBS ${GNOPROJ_SOURCE_DIR}/../lib/libfastcal/bin/libfastcal.a)
-
-# ==============================================================================
-# Include directories
-# ==============================================================================
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  ${OpenCV_INCLUDE_DIRS}
-  ${LIBGNOMONIC_INCLUDE_DIR}
-  ${LIBINTER_INCLUDE_DIR}
-  ${LIBFASTCAL_INCLUDE_DIR}
-)
-
-# ==============================================================================
-# Library linkage
-# ==============================================================================
-set(GNOPROJ_LIBRARY_LIST
-  ${OpenCV_LIBS}
-  ${LIBGNOMONIC_LIBS}
-  ${LIBINTER_LIBS}
-  ${LIBFASTCAL_LIBS}
-)
 
 # ==============================================================================
 # Build executable
 # ==============================================================================
-add_executable(gnoproj gnoproj.cpp)
+add_executable(
+       gnoproj
+       gnoproj.cpp)
+
 target_link_libraries(gnoproj
   ${GNOPROJ_LIBRARY_LIST}
 )
 
 add_dependencies(gnoproj libgnomonic libfastcal)
 
-install(TARGETS gnoproj DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+SET_PROPERTY(TARGET gnoproj PROPERTY FOLDER software)
 
-set(CONFIGURED_ONCE TRUE CACHE INTERNAL
-    "A flag showing that CMake has configured at least once.")
+install(TARGETS gnoproj DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
