@@ -54,7 +54,7 @@ target_link_libraries(gnoproj
   ${GNOPROJ_LIBRARY_LIST}
 )
 
-add_dependencies(gnoproj libgnomonic libfastcal)
+add_dependencies(gnoproj libgnomonic libfastcal stlplus)
 
 set_target_properties( gnoproj PROPERTIES RUNTIME_OUTPUT_DIRECTORY .. )
 
