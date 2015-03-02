@@ -94,6 +94,7 @@ using namespace cv;
 * needed for gnomonic projection.
 *
 * \param input_image   Name of the EQR image you want to project
+* \param output_directory  Complete path of the output directory where you want to put your images
 * \param mac_address   Mac address of the elphel camera that take the photo
 * \param mount_point   Mount point of the camera folder on your machine
 * \param focal         (optionnal) Focal length in mm that you want to use
@@ -105,16 +106,17 @@ using namespace cv;
 int main(int argc, char** argv) {
 
     /* Usage branch */
-    if ( argc != 4 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
+    if ( argc != 5 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
         /* Display help */
-        printf( "Usage : %s <input_image>  <camera mac adress>  <mount point> [ <focal> ]\n\n",argv[0]);
+        printf( "Usage : %s <input_image> <output_directory> <camera mac adress>  <mount point> [ <focal> ]\n\n",argv[0]);
         return 1;
     }
 
     // load inputs
     char* input_image_filename=argv[1]; // eqr image (input) filename
-    std::string mac_address(argv[2]);  //mac adress
-    std::string mount_point(argv[3]);  // mount point
+    std::string output_directory=argv[2]; // output directory
+    std::string mac_address(argv[3]);  //mac adress
+    std::string mount_point(argv[4]);  // mount point
     std::string input_image(input_image_filename);
 
     // check is a focal length is given, and update method if necessary
@@ -122,7 +124,7 @@ int main(int argc, char** argv) {
     double focal = 0.0;       // focal length (in mm)
     double minFocal = 0.05 ;  // lower bound for focal length
     double maxFocal = 500.0;  // upper bound for focal length
-    std::string inputFocal((argc==5)?argv[4]:"");
+    std::string inputFocal((argc==6)?argv[5]:"");
 
     // verify if input is present, and if yes, if it is consistant
     if(inputFocal.length())
@@ -142,6 +144,7 @@ int main(int argc, char** argv) {
     // do gnomonic projection
     const bool  bProjected = eqrToGnomonic (
           input_image,
+          output_directory,
           mount_point,
           mac_address,
           normalizedFocal,

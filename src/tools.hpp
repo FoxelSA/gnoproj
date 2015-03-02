@@ -202,6 +202,7 @@ bool  loadCalibrationData( sensorData & sD,
 * to retreive the original sensor image.
 *
 * \param  input_image      Name of EQR input image
+* \param  output_directory Path of the directory where you want to put your images
 * \param  mount_point      The mount point of the camera folder
 * \param  mac_address      The mac address of the considered elphel camera
 * \param  normalizedFocal  0 or 1. If 1, use normalized focal, else use calibration focal length
@@ -212,6 +213,7 @@ bool  loadCalibrationData( sensorData & sD,
 
 bool  eqrToGnomonic (
             const std::string & input_image,
+            const std::string & output_directory,
             const std::string & mount_point,
             const std::string & mac_address,
             const int & normalizedFocal,
