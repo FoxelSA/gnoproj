@@ -88,6 +88,18 @@ if (OPENMP_FOUND)
 find_package(PkgConfig)
 find_package(OpenCV REQUIRED)
 
+# ------------------------------------------------------------------------------
+# stlplus
+# ------------------------------------------------------------------------------
+add_custom_target(
+  stlplus
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/stlplus3/
+  COMMAND cmake .
+  COMMAND make
+)
+
+set(LIBSTL_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/lib/stlplus3/libstlplus.a)
+
 # ==============================================================================
 #  submodules Lignomonic and libinter
 # ==============================================================================
@@ -125,6 +137,9 @@ include_directories(
   ${LIBGNOMONIC_INCLUDE_DIR}
   ${LIBINTER_INCLUDE_DIR}
   ${LIBFASTCAL_INCLUDE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/cmdLine
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/stlAddition
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/stlplus3/filesystemSimplified/
 )
 
 # ==============================================================================
@@ -135,6 +150,7 @@ set(GNOPROJ_LIBRARY_LIST
   ${LIBGNOMONIC_LIBS}
   ${LIBINTER_LIBS}
   ${LIBFASTCAL_LIBS}
+  ${LIBSTL_LIBS}
 )
 
 # ==============================================================================

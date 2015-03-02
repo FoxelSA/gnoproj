@@ -41,6 +41,7 @@
 */
 
 #include "tools.hpp"
+#include "../lib/stlplus3/filesystemSimplified/file_system.hpp"
 #include <cstring>
 
 using namespace std;
@@ -166,7 +167,7 @@ bool  eqrToGnomonic (
             const int & normalizedFocal,
             const double & focal )
 {
-    std::string output_image_filename=output_directory; // output image filename
+    std::string output_image_filename=output_directory+"/"; // output image filename
 
     // extract channel information from image name
     std::vector<string>  splitted_name;
@@ -175,15 +176,32 @@ bool  eqrToGnomonic (
     split( input_image, "-", splitted_name );
     split( input_image, "_", out_split );
 
+    // check if output image already exists
+    if(!normalizedFocal)
+    {
+        output_image_filename+=out_split[0]+"_"+out_split[1]+"-RECT-SENSOR.tiff";
+    }
+    else
+    {
+      // create output image name
+      output_image_filename+=out_split[0]+out_split[1]+"-RECT-CONFOC.tiff";
+    }
+
+    if ( stlplus::file_exists( output_image_filename ) )
+    {
+      std::cerr << "\nThe output image exists, do nothing" << std::endl;
+      return false;
+    }
+
     const size_t sensor_index=atoi(splitted_name[1].c_str());
     sensorData   sensorSD;
 
     // load calibration informations
     bool  bLoadCalibration = loadCalibrationData
-                                    ( sensorSD,
-                                      sensor_index,
-                                      mount_point,
-                                      mac_address );
+                                  ( sensorSD,
+                                    sensor_index,
+                                    mount_point,
+                                    mac_address );
 
     if( !bLoadCalibration )
     {
@@ -223,9 +241,6 @@ bool  eqrToGnomonic (
                   sensorSD.lfFocalLength,
                   li_bicubicf
               );
-
-              // create output image name
-              output_image_filename+=out_split[0]+"_"+out_split[1]+"-RECT-SENSOR.tiff";
         }
         else
         {
@@ -250,9 +265,6 @@ bool  eqrToGnomonic (
               sensorSD.lfPixelSize,
               li_bicubicf
               );
-
-              // create output image name
-              output_image_filename+=out_split[0]+out_split[1]+"-RECT-CONFOC.tiff";
           }
 
         /* Gnomonic image exportation */
