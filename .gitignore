@@ -1,2 +1,7 @@
 build/
+bin/
 doc/
+obj/
+lib/stlplus3/*make*
+lib/stlplus3/*Make*
+lib/stlplus3/*.a
