@@ -166,7 +166,7 @@ bool  eqrToGnomonic (
             const int & normalizedFocal,
             const double & focal )
 {
-    std::string output_image_filename=output_directory; // output image filename
+    std::string output_image_filename="./"+output_directory+"/"; // output image filename
 
     // extract channel information from image name
     std::vector<string>  splitted_name;
