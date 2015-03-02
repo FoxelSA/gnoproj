@@ -41,6 +41,8 @@
  */
 
 #include "tools.hpp"
+#include "../lib/stlplus3/filesystemSimplified/file_system.hpp"
+#include "../lib/cmdLine/cmdLine.h"
 #include <cstring>
 
 using namespace std;
@@ -105,40 +107,121 @@ using namespace cv;
 
 int main(int argc, char** argv) {
 
-    /* Usage branch */
-    if ( argc != 5 || !strcmp( argv[1], "help" ) || !strcmp(argv[1],"-h") || !strcmp(argv[1],"--help")  ) {
-        /* Display help */
-        printf( "Usage : %s <input_image> <output_directory> <camera mac adress>  <mount point> [ <focal> ]\n\n",argv[0]);
-        return 1;
-    }
+    CmdLine cmd;
 
     // load inputs
-    char* input_image_filename=argv[1]; // eqr image (input) filename
-    std::string output_directory=argv[2]; // output directory
-    std::string mac_address(argv[3]);  //mac adress
-    std::string mount_point(argv[4]);  // mount point
-    std::string input_image(input_image_filename);
+    std::string input_image=""; // eqr image (input) filename
+    std::string output_directory=""; // output directory
+    std::string mac_address="";  //mac adress
+    std::string mount_point="";  // mount point
 
     // check is a focal length is given, and update method if necessary
     int  normalizedFocal(0);  // gnomonic projection method. 0 elphel method (default), 1 with constant focal
     double focal = 0.0;       // focal length (in mm)
     double minFocal = 0.05 ;  // lower bound for focal length
     double maxFocal = 500.0;  // upper bound for focal length
-    std::string inputFocal((argc==6)?argv[5]:"");
+
+    cmd.add( make_option('i', input_image, "inputEQRImage") );
+    cmd.add( make_option('o', output_directory, "outputDirectory") );
+    cmd.add( make_option('m', mac_address, "macAddress") );
+    cmd.add( make_option('d', mount_point, "mountPoint") );
+    cmd.add( make_option('f', focal, "focal") );
+
+    try {
+      if (argc == 1) throw std::string("Invalid command line parameter.");
+      cmd.process(argc, argv);
+    } catch(const std::string& s) {
+      std::cerr << "Usage: " << argv[0] << '\n'
+      << "[-i|--inputEQRImage]\n"
+      << "[-m]--macAddress\n"
+      << "[-o|--outputDirectory]\n"
+      << "[-d]--mountPoint]\n"
+      << "[-f|--focal] (in mm)\n"
+      << std::endl;
+
+      std::cerr << s << std::endl;
+      return EXIT_FAILURE;
+    }
 
     // verify if input is present, and if yes, if it is consistant
-    if(inputFocal.length())
+    if(focal > 0.0)
     {
-      focal  = atof(inputFocal.c_str());
       normalizedFocal = 1;
 
       // check input focal
       if( focal < minFocal || focal > maxFocal)
       {
         std::cerr << "Focal length is less than " << minFocal << " mm or bigger than " << maxFocal << " mm. ";
-        std::cerr << "Input focal is " << inputFocal << endl;
-        return 0;
+        std::cerr << "Input focal is " << focal << endl;
+        return EXIT_FAILURE;
       }
+    }
+
+    // check if image dir exists
+    if ( !stlplus::file_exists( input_image ) )
+    {
+      std::cerr << "\nThe input image doesn't exist" << std::endl;
+      return EXIT_FAILURE;
+    }
+    else
+    {
+      // check if output dir is given
+      if (output_directory.empty())
+      {
+        std::cerr << "\nInvalid output directory" << std::endl;
+        return EXIT_FAILURE;
+      }
+      else
+      {
+        // if output dir is empty, create it
+        if ( !stlplus::folder_exists( output_directory ) )
+        {
+          if( !stlplus::folder_create ( output_directory ) )
+          {
+            std::cerr << "\nCannot create output directory" << std::endl;
+            return EXIT_FAILURE;
+          }
+          else
+          {
+            // check if mac address is given
+            if( mac_address.empty() )
+            {
+              std::cerr << "\n No mac address given " << std::endl;
+              return EXIT_FAILURE;
+            }
+            else
+            {
+              // check if mount point is given
+              if( mount_point.empty() )
+              {
+                std::cerr << "\n No mount point given " << std::endl;
+                return EXIT_FAILURE;
+              }
+            }
+          }
+        }
+        else
+        {
+            // check if mac address is given
+            if( mac_address.empty() )
+            {
+              std::cerr << "\n No mac address given " << std::endl;
+              return EXIT_FAILURE;
+            }
+            else
+            {
+              // check if mount point is given
+              if( mount_point.empty() )
+              {
+                std::cerr << "\n No mount point given " << std::endl;
+                return EXIT_FAILURE;
+              }
+            }
+
+          }
+
+      }
+
     }
 
     // do gnomonic projection
