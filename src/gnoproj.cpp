@@ -133,9 +133,9 @@ int main(int argc, char** argv) {
     } catch(const std::string& s) {
       std::cerr << "Usage: " << argv[0] << '\n'
       << "[-i|--inputEQRImage]\n"
-      << "[-m]--macAddress\n"
+      << "[-m|--macAddress]\n"
       << "[-o|--outputDirectory]\n"
-      << "[-d]--mountPoint]\n"
+      << "[-d|--mountPoint]\n"
       << "[-f|--focal] (in mm)\n"
       << std::endl;
 
