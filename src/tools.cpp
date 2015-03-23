@@ -169,12 +169,18 @@ bool  eqrToGnomonic (
 {
     std::string output_image_filename=output_directory+"/"; // output image filename
 
+    //extract image basename
+    std::vector<string>  split_slash;
+    split( input_image, "/", split_slash );
+
+    const std::string image_basename =  split_slash[split_slash.size()-1];
+
     // extract channel information from image name
     std::vector<string>  splitted_name;
     std::vector<string>  out_split;
 
-    split( input_image, "-", splitted_name );
-    split( input_image, "_", out_split );
+    split( image_basename, "-", splitted_name );
+    split( image_basename, "_", out_split );
 
     // check if output image already exists
     if(!normalizedFocal)
