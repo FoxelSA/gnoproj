@@ -91,6 +91,7 @@ find_package(OpenCV REQUIRED)
 # ------------------------------------------------------------------------------
 # stlplus
 # ------------------------------------------------------------------------------
+add_subdirectory(lib)
 set(LIBSTL_LIBS ${PROJECT_BINARY_DIR}/lib/stlplus3/libstlplus.a)
 
 # ==============================================================================
@@ -150,4 +151,3 @@ set(GNOPROJ_LIBRARY_LIST
 # Build executable
 # ==============================================================================
 add_subdirectory(src)
-add_subdirectory(lib)

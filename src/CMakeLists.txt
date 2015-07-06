@@ -35,13 +35,6 @@
 # You are required to attribute the work as explained in the "Usage and
 # Attribution" section of <http://foxel.ch/license>.
 #
-
-# ==============================================================================
-#  CMake base
-# ==============================================================================
-
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-
 # ==============================================================================
 # Build executable
 # ==============================================================================
@@ -50,11 +43,11 @@ add_executable(
        gnoproj.cpp
        tools.cpp )
 
+add_dependencies(gnoproj libgnomonic libfastcal stlplus)
+
 target_link_libraries(gnoproj
   ${GNOPROJ_LIBRARY_LIST}
 )
-
-add_dependencies(gnoproj libgnomonic libfastcal )
 
 set_target_properties( gnoproj PROPERTIES RUNTIME_OUTPUT_DIRECTORY .. )
 
