@@ -91,14 +91,7 @@ find_package(OpenCV REQUIRED)
 # ------------------------------------------------------------------------------
 # stlplus
 # ------------------------------------------------------------------------------
-add_custom_target(
-  stlplus
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/stlplus3/
-  COMMAND cmake .
-  COMMAND make
-)
-
-set(LIBSTL_LIBS ${CMAKE_CURRENT_SOURCE_DIR}/lib/stlplus3/libstlplus.a)
+set(LIBSTL_LIBS ${PROJECT_BINARY_DIR}/lib/stlplus3/libstlplus.a)
 
 # ==============================================================================
 #  submodules Lignomonic and libinter
@@ -157,3 +150,4 @@ set(GNOPROJ_LIBRARY_LIST
 # Build executable
 # ==============================================================================
 add_subdirectory(src)
+add_subdirectory(lib)
